@@ -38,6 +38,8 @@ public class MediaDownloader {
             command.add("bestvideo[ext=mp4][vcodec^=avc1]+bestaudio[ext=m4a]/best[ext=mp4]/best");
         }
 
+        command.add("--max-filesize");
+        command.add("25M");
         command.add("-o");
         command.add(outputFile.getAbsolutePath());
         command.add("--restrict-filenames");
