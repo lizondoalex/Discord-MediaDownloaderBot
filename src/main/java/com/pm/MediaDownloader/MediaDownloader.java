@@ -3,17 +3,33 @@ package com.pm.MediaDownloader;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 public class MediaDownloader {
 
     public File download(String url, String format) throws Exception{
-        String outputName = "downloads/" + UUID.randomUUID() + "." + format;
+        String folder = "downloads/";
+
+        List<String> getFilenameCmd = new ArrayList<>();
+        getFilenameCmd.add("yt-dlp");
+        getFilenameCmd.add("--get-filename");
+        getFilenameCmd.add("--restrict-filenames");
+        getFilenameCmd.add("-o");
+        getFilenameCmd.add("%(title)s." + format);
+        getFilenameCmd.add(url);
+
+        Process nameProcess = new ProcessBuilder(getFilenameCmd).start();
+        String finalName;
+        try (java.util.Scanner s = new java.util.Scanner(nameProcess.getInputStream())) {
+            finalName = s.hasNextLine() ? s.nextLine() : "video_" + System.currentTimeMillis() + "." + format;
+        }
+        nameProcess.waitFor();
+
+        File outputFile = new File(folder + finalName);
 
         List<String> command = new ArrayList<>();
         command.add("yt-dlp");
 
-        if(format.equalsIgnoreCase("mp3")){
+        if (format.equalsIgnoreCase("mp3")) {
             command.add("-x");
             command.add("--audio-format");
             command.add("mp3");
@@ -23,19 +39,17 @@ public class MediaDownloader {
         }
 
         command.add("-o");
-        command.add(outputName);
+        command.add(outputFile.getAbsolutePath());
+        command.add("--restrict-filenames");
         command.add(url);
 
+        ProcessBuilder pb = new ProcessBuilder(command);
+        pb.inheritIO();
+        Process process = pb.start();
 
-
-        ProcessBuilder processBuilder = new ProcessBuilder(command);
-        processBuilder.inheritIO();
-
-        Process process = processBuilder.start();
         int exitCode = process.waitFor();
-
-        if(exitCode == 0){
-            return new File(outputName);
+        if (exitCode == 0) {
+            return outputFile;
         } else {
             throw new RuntimeException("yt-dlp failed with exit code " + exitCode);
         }
