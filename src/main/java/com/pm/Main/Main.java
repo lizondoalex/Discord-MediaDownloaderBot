@@ -4,6 +4,8 @@ import com.pm.EventListener.EventListener;
 import io.github.cdimascio.dotenv.Dotenv;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 
 public class Main {
@@ -27,6 +29,15 @@ public class Main {
                 .build();
 
         jda.awaitReady();
+        jda.upsertCommand("download", "Download content from social media")
+                .addOptions(
+                        new OptionData(OptionType.STRING, "format", "Choose the output format", true)
+                                .addChoice("MP3 (Audio Only)", "mp3")
+                                .addChoice("MP4 (Video)", "mp4"),
+                        new OptionData(OptionType.STRING, "url", "Link from youtube, soundcloud, etc...", true)
+                )
+                .queue();
+
         System.out.println("Bot connected and ready");
 
     }

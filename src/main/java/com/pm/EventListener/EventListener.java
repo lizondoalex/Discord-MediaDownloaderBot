@@ -1,21 +1,40 @@
 package com.pm.EventListener;
 
+import com.pm.MediaDownloader.MediaDownloader;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
+import net.dv8tion.jda.api.utils.FileUpload;
+
+import java.io.File;
 
 public class EventListener extends ListenerAdapter {
 
-    @Override
-    public void onMessageReceived(MessageReceivedEvent event) {
-        if (event.getAuthor().isBot()) return;
+    @Override public void onSlashCommandInteraction(SlashCommandInteractionEvent event){
+        if (!event.getName().equals("download")) return;
 
-        Message msg = event.getMessage();
-        String content = msg.getContentRaw();
-        MessageChannel channel = event.getChannel();
+        String url = event.getOption("url").getAsString();
+        String format = event.getOption("format").getAsString();
 
-        channel.sendMessage("Message received with content: " + content).queue();
-        System.out.println("Printing to console the content received: " + content);
+        event.deferReply().queue();
+
+        new Thread(() -> {
+            try {
+                MediaDownloader downloader = new MediaDownloader();
+                File result = downloader.download(url, format);
+
+                if (result.exists()) {
+                    event.getHook().sendFiles(FileUpload.fromData(result)).queue(success -> {
+                        result.delete();
+                    });
+                }
+            } catch (Exception e) {
+                event.getHook().sendMessage("Error downloading media: " + e.getMessage()).queue();
+                e.printStackTrace();
+            }
+        }).start();
     }
 }
