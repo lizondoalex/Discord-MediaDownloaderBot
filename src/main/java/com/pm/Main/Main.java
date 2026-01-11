@@ -4,9 +4,14 @@ import com.pm.EventListener.EventListener;
 import io.github.cdimascio.dotenv.Dotenv;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.interactions.IntegrationType;
+import net.dv8tion.jda.api.interactions.InteractionContextType;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+
+import static net.dv8tion.jda.api.interactions.commands.build.Commands.*;
 
 public class Main {
     public static void main(String[] args) throws InterruptedException {
@@ -29,14 +34,17 @@ public class Main {
                 .build();
 
         jda.awaitReady();
-        jda.upsertCommand("download", "Download content from social media")
-                .addOptions(
-                        new OptionData(OptionType.STRING, "format", "Choose the output format", true)
-                                .addChoice("MP3 (Audio Only)", "mp3")
-                                .addChoice("MP4 (Video)", "mp4"),
-                        new OptionData(OptionType.STRING, "url", "Link from youtube, soundcloud, etc...", true)
-                )
-                .queue();
+        jda.updateCommands().addCommands(
+                slash("download", "Download content from social media")
+                        .setIntegrationTypes(IntegrationType.GUILD_INSTALL, IntegrationType.USER_INSTALL)
+                        .setContexts(InteractionContextType.GUILD, InteractionContextType.BOT_DM, InteractionContextType.PRIVATE_CHANNEL)
+                        .addOptions(
+                                new OptionData(OptionType.STRING, "format", "Choose the output format", true)
+                                        .addChoice("MP3 (Audio Only)", "mp3")
+                                        .addChoice("MP4 (Video)", "mp4"),
+                                new OptionData(OptionType.STRING, "url", "Link from youtube, soundcloud, etc...", true)
+                        )
+        ).queue();
 
         System.out.println("Bot connected and ready");
 
